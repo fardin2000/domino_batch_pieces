@@ -1,5 +1,5 @@
 {
-    "name": "BatchImageFilter",
+    "name": "BatchImageFilterPiece",
     "description": "Download a list of image URLs and apply a PIL filter to each.",
     "dependency": {
         "requirements_file": "requirements_0.txt"

@@ -3,7 +3,7 @@ from domino.testing import piece_dry_run
 
 def test_batch_image_filter_single_url():
     out = piece_dry_run(
-        piece_name="BatchImageFilter",
+        piece_name="BatchImageFilterPiece",
         input_data=dict(
             image_urls=[
                 "https://upload.wikimedia.org/wikipedia/commons/3/3a/Cat03.jpg",
@@ -18,7 +18,7 @@ def test_batch_image_filter_single_url():
 
 def test_batch_image_filter_multiple_urls():
     out = piece_dry_run(
-        piece_name="BatchImageFilter",
+        piece_name="BatchImageFilterPiece",
         input_data=dict(
             image_urls=[
                 "https://upload.wikimedia.org/wikipedia/commons/3/3a/Cat03.jpg",

@@ -22,7 +22,7 @@ PIL_FILTERS = {
 }
 
 
-class BatchImageFilter(BasePiece):
+class BatchImageFilterPiece(BasePiece):
 
     def piece_function(self, input_data: InputModel):
         urls = input_data.image_urls
