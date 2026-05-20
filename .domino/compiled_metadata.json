@@ -1,0 +1,96 @@
+{
+    "BatchImageFilterPiece": {
+        "name": "BatchImageFilterPiece",
+        "dependency": {
+            "dockerfile": null,
+            "requirements_file": "requirements_0.txt"
+        },
+        "tags": [
+            "image",
+            "batch",
+            "filter"
+        ],
+        "style": {
+            "node_label": "Batch Image Filter",
+            "node_type": "default",
+            "node_style": {
+                "backgroundColor": "#ebebeb"
+            },
+            "useIcon": true,
+            "icon_class_name": "fas fa-images",
+            "iconStyle": {
+                "cursor": "pointer"
+            }
+        },
+        "description": "Download a list of image URLs and apply a PIL filter to each.",
+        "input_schema": {
+            "$defs": {
+                "FilterType": {
+                    "enum": [
+                        "BLUR",
+                        "CONTOUR",
+                        "DETAIL",
+                        "EDGE_ENHANCE",
+                        "EMBOSS",
+                        "SHARPEN",
+                        "SMOOTH"
+                    ],
+                    "title": "FilterType",
+                    "type": "string"
+                }
+            },
+            "description": "BatchImageFilter Input",
+            "properties": {
+                "image_urls": {
+                    "default": [],
+                    "description": "List of image URLs to download and filter.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "title": "Image Urls",
+                    "type": "array"
+                },
+                "filter_type": {
+                    "allOf": [
+                        {
+                            "$ref": "#/$defs/FilterType"
+                        }
+                    ],
+                    "default": "BLUR",
+                    "description": "PIL ImageFilter to apply to each downloaded image."
+                }
+            },
+            "title": "InputModel",
+            "type": "object"
+        },
+        "output_schema": {
+            "description": "BatchImageFilter Output",
+            "properties": {
+                "filtered_image_paths": {
+                    "description": "Paths to filtered images written to shared storage.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "title": "Filtered Image Paths",
+                    "type": "array"
+                },
+                "filtered_images_base64": {
+                    "description": "Base64-encoded PNGs of the filtered images.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "title": "Filtered Images Base64",
+                    "type": "array"
+                }
+            },
+            "required": [
+                "filtered_image_paths",
+                "filtered_images_base64"
+            ],
+            "title": "OutputModel",
+            "type": "object"
+        },
+        "secrets_schema": null,
+        "source_url": "https://github.com/fardin2000/domino_batch_pieces/tree/main/pieces/BatchImageFilterPiece"
+    }
+}
