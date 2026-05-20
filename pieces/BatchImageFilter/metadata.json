@@ -1,0 +1,12 @@
+{
+    "name": "BatchImageFilter",
+    "description": "Download a list of image URLs and apply a PIL filter to each.",
+    "dependency": {
+        "requirements_file": "requirements_0.txt"
+    },
+    "style": {
+        "node_label": "Batch Image Filter",
+        "icon_class_name": "fas fa-images"
+    },
+    "tags": ["image", "batch", "filter"]
+}
