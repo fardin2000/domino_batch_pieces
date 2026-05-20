@@ -1,5 +1,6 @@
 import base64
 import io
+import math
 from pathlib import Path
 from typing import List
 
@@ -29,52 +30,24 @@ FILTER_MASKS = {
 class BatchImageFilterPiece(BasePiece):
 
     @staticmethod
-    def _build_gallery_html(
-        images_b64: List[str],
-        enabled_filters: List[str],
-        failed: List[str],
-        total: int,
-    ) -> str:
-        filters_str = ", ".join(enabled_filters) if enabled_filters else "none (passthrough)"
-        cards = []
-        for idx, b64 in enumerate(images_b64):
-            uri = f"data:image/png;base64,{b64}"
-            fname = f"filtered_{idx}.png"
-            cards.append(
-                f"<div class='card'>"
-                f"<a href='{uri}' download='{fname}' title='Click to download {fname}'>"
-                f"<img src='{uri}' alt='{fname}'/></a>"
-                f"<a class='dl' href='{uri}' download='{fname}'>{fname}</a>"
-                f"</div>"
-            )
-        failed_block = ""
-        if failed:
-            items = "".join(f"<li>{u}</li>" for u in failed)
-            failed_block = (
-                f"<details class='failed'><summary>{len(failed)} URL(s) failed</summary>"
-                f"<ul>{items}</ul></details>"
-            )
-        return (
-            "<!doctype html><html><head><meta charset='utf-8'>"
-            "<style>"
-            "body{font-family:system-ui,sans-serif;margin:1em;background:#1e1e1e;color:#eee}"
-            "h1{font-size:1.1em;font-weight:500;margin:0 0 .25em}"
-            ".meta{color:#aaa;font-size:.85em;margin-bottom:1em}"
-            ".grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1em}"
-            ".card{background:#2a2a2a;border-radius:8px;padding:.5em;text-align:center}"
-            ".card img{max-width:100%;height:auto;display:block;margin:0 auto .5em;border-radius:4px;cursor:pointer}"
-            ".card .dl{color:#7ab8ff;text-decoration:none;font-size:.85em;word-break:break-all}"
-            ".card .dl:hover{text-decoration:underline}"
-            ".failed{margin-top:1.5em;background:#3a2a2a;padding:.5em 1em;border-radius:6px}"
-            ".failed summary{cursor:pointer;color:#ffb3b3}"
-            ".failed ul{font-size:.85em;word-break:break-all}"
-            "</style></head><body>"
-            f"<h1>BatchImageFilter — {len(images_b64)}/{total} images</h1>"
-            f"<div class='meta'>Filters applied: {filters_str} · Click any image to download</div>"
-            f"<div class='grid'>{''.join(cards)}</div>"
-            f"{failed_block}"
-            "</body></html>"
-        )
+    def _build_collage(images: List[Image.Image], cell_size: int = 320, pad: int = 8) -> Image.Image:
+        n = len(images)
+        cols = max(1, math.ceil(math.sqrt(n)))
+        rows = math.ceil(n / cols)
+        canvas_w = cols * cell_size + (cols + 1) * pad
+        canvas_h = rows * cell_size + (rows + 1) * pad
+        canvas = Image.new("RGB", (canvas_w, canvas_h), (30, 30, 30))
+
+        for i, img in enumerate(images):
+            thumb = img.copy()
+            thumb.thumbnail((cell_size, cell_size))
+            cell_x = pad + (i % cols) * (cell_size + pad)
+            cell_y = pad + (i // cols) * (cell_size + pad)
+            off_x = (cell_size - thumb.width) // 2
+            off_y = (cell_size - thumb.height) // 2
+            canvas.paste(thumb, (cell_x + off_x, cell_y + off_y))
+
+        return canvas
 
     def piece_function(self, input_data: InputModel):
         urls = input_data.image_urls
@@ -98,6 +71,7 @@ class BatchImageFilterPiece(BasePiece):
 
         out_paths: List[str] = []
         out_b64: List[str] = []
+        out_images: List[Image.Image] = []
         failed: List[str] = []
         want_file = input_data.output_type in ("file", "both")
         want_b64 = input_data.output_type in ("base64_string", "both")
@@ -119,6 +93,7 @@ class BatchImageFilterPiece(BasePiece):
                 arr[..., :3] = np.clip(arr[..., :3] @ mask.T, 0, 255)
 
             modified = Image.fromarray(arr.astype(np.uint8))
+            out_images.append(modified)
 
             if want_file:
                 path = str(Path(self.results_path) / f"filtered_{idx}.png")
@@ -132,32 +107,23 @@ class BatchImageFilterPiece(BasePiece):
 
         if failed:
             self.logger.warning(f"{len(failed)}/{len(urls)} URLs failed: {failed}")
-        if not out_paths and not out_b64:
+        if not out_images:
             raise RuntimeError(f"All {len(urls)} URLs failed to download. See logs.")
 
-        gallery_b64_source = out_b64 if out_b64 else [
-            base64.b64encode(Path(p).read_bytes()).decode("utf-8") for p in out_paths
-        ]
-        gallery_html = self._build_gallery_html(
-            gallery_b64_source,
-            enabled_filters,
-            failed,
-            total=len(urls),
-        )
+        collage = self._build_collage(out_images)
+        collage_path = str(Path(self.results_path) / "_preview_collage.png")
+        collage.save(collage_path, format="PNG")
+        collage_buf = io.BytesIO()
+        collage.save(collage_buf, format="PNG")
         self.display_result = {
-            "file_type": "html",
-            "base64_content": base64.b64encode(gallery_html.encode("utf-8")).decode("utf-8"),
+            "file_type": "png",
+            "base64_content": base64.b64encode(collage_buf.getvalue()).decode("utf-8"),
+            "file_path": collage_path,
         }
-
-        preview_b64 = out_b64[-1] if out_b64 else None
-        if preview_b64 is None and out_paths:
-            with open(out_paths[-1], "rb") as f:
-                preview_b64 = base64.b64encode(f.read()).decode("utf-8")
-        if preview_b64:
-            self.display_result = {
-                "file_type": "png",
-                "base64_content": preview_b64,
-            }
+        self.logger.info(
+            f"Built preview collage: {len(out_images)} image(s) in a "
+            f"{collage.width}x{collage.height} grid → {collage_path}"
+        )
 
         return OutputModel(
             image_file_paths=out_paths,

@@ -164,7 +164,21 @@ which is exactly what broke us on the first CI run.
 
 ## Changelog
 
-### 0.3.0 — HTML gallery preview
+### 0.3.1 — PNG collage preview (replaces HTML gallery)
+- The 0.3.0 HTML gallery never showed because (a) a stale `display_result`
+  assignment was overwriting the gallery with the last single image, and
+  (b) even with the bug fixed, Domino's frontend renders `display_result`
+  HTML in a sandboxed iframe that blocks `data:` URIs for security, so the
+  embedded images would never have loaded.
+- Replaced with a PIL-generated PNG collage: all filtered images
+  thumbnailed (≤320px each) and tiled into a `ceil(sqrt(n))`-wide grid on
+  a dark background. PNG is rendered universally by Domino.
+- The collage doubles as Domino's "Download content" artifact — one PNG
+  containing every filtered image at thumbnail size.
+- Full-resolution per-image files are still saved to `self.results_path`
+  and listed in the `image_file_paths` output for downstream pieces.
+
+### 0.3.0 — HTML gallery preview (broken — see 0.3.1)
 - `display_result` is now a self-contained HTML gallery (one card per
   filtered image, each clickable to download just that image) instead of a
   single PNG showing only the last image.
