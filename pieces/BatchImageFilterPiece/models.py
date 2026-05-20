@@ -4,14 +4,10 @@ from typing import List
 from pydantic import BaseModel, Field
 
 
-class FilterType(str, Enum):
-    BLUR = "BLUR"
-    CONTOUR = "CONTOUR"
-    DETAIL = "DETAIL"
-    EDGE_ENHANCE = "EDGE_ENHANCE"
-    EMBOSS = "EMBOSS"
-    SHARPEN = "SHARPEN"
-    SMOOTH = "SMOOTH"
+class OutputType(str, Enum):
+    file = "file"
+    base64_string = "base64_string"
+    both = "both"
 
 
 class InputModel(BaseModel):
@@ -20,17 +16,29 @@ class InputModel(BaseModel):
         default=[],
         description="List of image URLs to download and filter.",
     )
-    filter_type: FilterType = Field(
-        default=FilterType.BLUR,
-        description="PIL ImageFilter to apply to each downloaded image.",
+    sepia: bool = Field(default=False, description="Apply sepia effect.")
+    black_and_white: bool = Field(default=False, description="Apply black and white effect.")
+    brightness: bool = Field(default=False, description="Apply brightness effect.")
+    darkness: bool = Field(default=False, description="Apply darkness effect.")
+    contrast: bool = Field(default=False, description="Apply contrast effect.")
+    red: bool = Field(default=False, description="Apply red effect.")
+    green: bool = Field(default=False, description="Apply green effect.")
+    blue: bool = Field(default=False, description="Apply blue effect.")
+    cool: bool = Field(default=False, description="Apply cool effect.")
+    warm: bool = Field(default=False, description="Apply warm effect.")
+    output_type: OutputType = Field(
+        default=OutputType.both,
+        description="Format of the output images. Options: `file`, `base64_string`, `both`.",
     )
 
 
 class OutputModel(BaseModel):
     """BatchImageFilter Output"""
-    filtered_image_paths: List[str] = Field(
+    image_file_paths: List[str] = Field(
+        default=[],
         description="Paths to filtered images written to shared storage.",
     )
-    filtered_images_base64: List[str] = Field(
+    image_base64_strings: List[str] = Field(
+        default=[],
         description="Base64-encoded PNGs of the filtered images.",
     )
