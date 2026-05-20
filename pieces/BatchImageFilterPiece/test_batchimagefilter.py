@@ -6,7 +6,7 @@ def test_batch_image_filter_single_url():
         piece_name="BatchImageFilterPiece",
         input_data=dict(
             image_urls=[
-                "https://upload.wikimedia.org/wikipedia/commons/3/3a/Cat03.jpg",
+                "https://picsum.photos/seed/domino1/200/200",
             ],
             filter_type="BLUR",
         ),
@@ -21,8 +21,8 @@ def test_batch_image_filter_multiple_urls():
         piece_name="BatchImageFilterPiece",
         input_data=dict(
             image_urls=[
-                "https://upload.wikimedia.org/wikipedia/commons/3/3a/Cat03.jpg",
-                "https://upload.wikimedia.org/wikipedia/commons/4/4d/Cat_November_2010-1a.jpg",
+                "https://picsum.photos/seed/domino1/200/200",
+                "https://picsum.photos/seed/domino2/200/200",
             ],
             filter_type="CONTOUR",
         ),

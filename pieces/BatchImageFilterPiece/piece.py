@@ -31,12 +31,16 @@ class BatchImageFilterPiece(BasePiece):
 
         pil_filter = PIL_FILTERS[input_data.filter_type.value]
 
+        Path(self.results_path).mkdir(parents=True, exist_ok=True)
+
+        headers = {"User-Agent": "DominoBatchImageFilter/0.1 (+https://github.com/fardin2000/domino_batch_pieces)"}
+
         out_paths: List[str] = []
         out_b64: List[str] = []
 
         for idx, url in enumerate(urls):
             self.logger.info(f"[{idx + 1}/{len(urls)}] downloading {url}")
-            resp = requests.get(url, timeout=30)
+            resp = requests.get(url, timeout=30, headers=headers)
             resp.raise_for_status()
 
             img = Image.open(io.BytesIO(resp.content)).convert("RGB")
