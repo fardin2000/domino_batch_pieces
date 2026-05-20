@@ -25,17 +25,13 @@
         "description": "Download a list of image URLs and apply a PIL filter to each.",
         "input_schema": {
             "$defs": {
-                "FilterType": {
+                "OutputType": {
                     "enum": [
-                        "BLUR",
-                        "CONTOUR",
-                        "DETAIL",
-                        "EDGE_ENHANCE",
-                        "EMBOSS",
-                        "SHARPEN",
-                        "SMOOTH"
+                        "file",
+                        "base64_string",
+                        "both"
                     ],
-                    "title": "FilterType",
+                    "title": "OutputType",
                     "type": "string"
                 }
             },
@@ -50,14 +46,74 @@
                     "title": "Image Urls",
                     "type": "array"
                 },
-                "filter_type": {
+                "sepia": {
+                    "default": false,
+                    "description": "Apply sepia effect.",
+                    "title": "Sepia",
+                    "type": "boolean"
+                },
+                "black_and_white": {
+                    "default": false,
+                    "description": "Apply black and white effect.",
+                    "title": "Black And White",
+                    "type": "boolean"
+                },
+                "brightness": {
+                    "default": false,
+                    "description": "Apply brightness effect.",
+                    "title": "Brightness",
+                    "type": "boolean"
+                },
+                "darkness": {
+                    "default": false,
+                    "description": "Apply darkness effect.",
+                    "title": "Darkness",
+                    "type": "boolean"
+                },
+                "contrast": {
+                    "default": false,
+                    "description": "Apply contrast effect.",
+                    "title": "Contrast",
+                    "type": "boolean"
+                },
+                "red": {
+                    "default": false,
+                    "description": "Apply red effect.",
+                    "title": "Red",
+                    "type": "boolean"
+                },
+                "green": {
+                    "default": false,
+                    "description": "Apply green effect.",
+                    "title": "Green",
+                    "type": "boolean"
+                },
+                "blue": {
+                    "default": false,
+                    "description": "Apply blue effect.",
+                    "title": "Blue",
+                    "type": "boolean"
+                },
+                "cool": {
+                    "default": false,
+                    "description": "Apply cool effect.",
+                    "title": "Cool",
+                    "type": "boolean"
+                },
+                "warm": {
+                    "default": false,
+                    "description": "Apply warm effect.",
+                    "title": "Warm",
+                    "type": "boolean"
+                },
+                "output_type": {
                     "allOf": [
                         {
-                            "$ref": "#/$defs/FilterType"
+                            "$ref": "#/$defs/OutputType"
                         }
                     ],
-                    "default": "BLUR",
-                    "description": "PIL ImageFilter to apply to each downloaded image."
+                    "default": "both",
+                    "description": "Format of the output images. Options: `file`, `base64_string`, `both`."
                 }
             },
             "title": "InputModel",
@@ -66,27 +122,25 @@
         "output_schema": {
             "description": "BatchImageFilter Output",
             "properties": {
-                "filtered_image_paths": {
+                "image_file_paths": {
+                    "default": [],
                     "description": "Paths to filtered images written to shared storage.",
                     "items": {
                         "type": "string"
                     },
-                    "title": "Filtered Image Paths",
+                    "title": "Image File Paths",
                     "type": "array"
                 },
-                "filtered_images_base64": {
+                "image_base64_strings": {
+                    "default": [],
                     "description": "Base64-encoded PNGs of the filtered images.",
                     "items": {
                         "type": "string"
                     },
-                    "title": "Filtered Images Base64",
+                    "title": "Image Base64 Strings",
                     "type": "array"
                 }
             },
-            "required": [
-                "filtered_image_paths",
-                "filtered_images_base64"
-            ],
             "title": "OutputModel",
             "type": "object"
         },
