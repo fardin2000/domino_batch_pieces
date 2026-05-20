@@ -28,6 +28,54 @@ FILTER_MASKS = {
 
 class BatchImageFilterPiece(BasePiece):
 
+    @staticmethod
+    def _build_gallery_html(
+        images_b64: List[str],
+        enabled_filters: List[str],
+        failed: List[str],
+        total: int,
+    ) -> str:
+        filters_str = ", ".join(enabled_filters) if enabled_filters else "none (passthrough)"
+        cards = []
+        for idx, b64 in enumerate(images_b64):
+            uri = f"data:image/png;base64,{b64}"
+            fname = f"filtered_{idx}.png"
+            cards.append(
+                f"<div class='card'>"
+                f"<a href='{uri}' download='{fname}' title='Click to download {fname}'>"
+                f"<img src='{uri}' alt='{fname}'/></a>"
+                f"<a class='dl' href='{uri}' download='{fname}'>{fname}</a>"
+                f"</div>"
+            )
+        failed_block = ""
+        if failed:
+            items = "".join(f"<li>{u}</li>" for u in failed)
+            failed_block = (
+                f"<details class='failed'><summary>{len(failed)} URL(s) failed</summary>"
+                f"<ul>{items}</ul></details>"
+            )
+        return (
+            "<!doctype html><html><head><meta charset='utf-8'>"
+            "<style>"
+            "body{font-family:system-ui,sans-serif;margin:1em;background:#1e1e1e;color:#eee}"
+            "h1{font-size:1.1em;font-weight:500;margin:0 0 .25em}"
+            ".meta{color:#aaa;font-size:.85em;margin-bottom:1em}"
+            ".grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1em}"
+            ".card{background:#2a2a2a;border-radius:8px;padding:.5em;text-align:center}"
+            ".card img{max-width:100%;height:auto;display:block;margin:0 auto .5em;border-radius:4px;cursor:pointer}"
+            ".card .dl{color:#7ab8ff;text-decoration:none;font-size:.85em;word-break:break-all}"
+            ".card .dl:hover{text-decoration:underline}"
+            ".failed{margin-top:1.5em;background:#3a2a2a;padding:.5em 1em;border-radius:6px}"
+            ".failed summary{cursor:pointer;color:#ffb3b3}"
+            ".failed ul{font-size:.85em;word-break:break-all}"
+            "</style></head><body>"
+            f"<h1>BatchImageFilter — {len(images_b64)}/{total} images</h1>"
+            f"<div class='meta'>Filters applied: {filters_str} · Click any image to download</div>"
+            f"<div class='grid'>{''.join(cards)}</div>"
+            f"{failed_block}"
+            "</body></html>"
+        )
+
     def piece_function(self, input_data: InputModel):
         urls = input_data.image_urls
         if not urls:
@@ -86,6 +134,20 @@ class BatchImageFilterPiece(BasePiece):
             self.logger.warning(f"{len(failed)}/{len(urls)} URLs failed: {failed}")
         if not out_paths and not out_b64:
             raise RuntimeError(f"All {len(urls)} URLs failed to download. See logs.")
+
+        gallery_b64_source = out_b64 if out_b64 else [
+            base64.b64encode(Path(p).read_bytes()).decode("utf-8") for p in out_paths
+        ]
+        gallery_html = self._build_gallery_html(
+            gallery_b64_source,
+            enabled_filters,
+            failed,
+            total=len(urls),
+        )
+        self.display_result = {
+            "file_type": "html",
+            "base64_content": base64.b64encode(gallery_html.encode("utf-8")).decode("utf-8"),
+        }
 
         preview_b64 = out_b64[-1] if out_b64 else None
         if preview_b64 is None and out_paths:
