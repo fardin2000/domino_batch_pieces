@@ -1,6 +1,6 @@
 [repository]
 # Lower-case GitHub owner that hosts this repository
-REGISTRY_NAME = "your-github-username"
+REGISTRY_NAME = "fardin2000"
 
 # Name of this Pieces repository (match the GitHub repo name)
 REPOSITORY_NAME = "domino_batch_pieces"
@@ -9,4 +9,4 @@ REPOSITORY_NAME = "domino_batch_pieces"
 REPOSITORY_LABEL = "Batch Image Pieces"
 
 # Bump this on every change you want released
-VERSION = "0.1.0"
+VERSION = "0.1.1"
